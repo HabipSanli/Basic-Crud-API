@@ -1,0 +1,17 @@
+{
+    "serverConfig":{
+        "port" : "3000",
+        "timeout" : "10000"
+    },
+    "dbConfig":{
+        "user" : "postgres",
+        "password" : "1597532468",
+        "database" : "deneme",
+        "host" : "localhost",
+        "port" : 5432
+    },
+    "jwt":{
+        "access_token_secret" : "273459768226c905d5889d05db6f98871af6b4ede2d0ec5b134cf1841afb5e04",
+        "refresh_token_secret" : "fb2fb4f75876c641f817c5100c0e4529a970a3dadf91782575057830bae5316c"
+    }
+}
