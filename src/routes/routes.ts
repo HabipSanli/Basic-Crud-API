@@ -11,16 +11,7 @@ import {
 	authenticate,
 } from "../middlewares/middlewares";
 const userRouter = express.Router();
-import crypto from "crypto";
 
-var user = {
-	user_id: 0,
-	name: "",
-	surname: "",
-	email: "",
-	password: "",
-	auth: false,
-};
 
 userRouter.route("/").get((req, res) => {
 	const userId = req.header("1");
@@ -34,7 +25,6 @@ userRouter.route("/register").post(checkUserNotRegistered, register, (req, res) 
 });
 
 userRouter.route("/login").post(checkUserExistance, login, (req, res) => {
-	user.auth = true;
 	//console.log(res.locals.id.id);
 	console.log(req.body.name);
 	res.json({
@@ -43,12 +33,6 @@ userRouter.route("/login").post(checkUserExistance, login, (req, res) => {
 });
 
 userRouter.route("/logout").post(logout, (req, res) => {
-	user.auth = false;
-	user.email = "";
-	user.password = "";
-	user.name = "";
-	user.surname = "";
-	user.user_id = 0;
 	console.log("Log Out.");
 });
 
@@ -58,7 +42,6 @@ userRouter.route("/credentials").put(authenticate, updateCredentials, (req, res)
 });
 
 userRouter.route("/").delete(authenticate, deleteUser, (req, res) => {   
-	user.auth = false;
 	console.log("User removed");
 	res.send("OK");
 });

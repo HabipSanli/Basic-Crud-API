@@ -28,10 +28,8 @@ export async function checkAuth(req: Request, res: Response, next: NextFunction)
 */
 let ats = cfg.jwt.access_token_secret;
 
-function generateToken(nameInfo: string, surnameInfo: string, emailInfo: string) {
+function generateToken(emailInfo: string) {
 	let user_info = {
-		name: nameInfo,
-		surname: surnameInfo,
 		email: emailInfo,
 	};
 
@@ -45,7 +43,7 @@ function verifyToken(token: string) {
 	} else {
 		try {
 			const tokenData = jwt.verify(token, ats);
-			return tokenData as { name: string; surname: string; email: string };
+			return tokenData as { email: string };
 		} catch (error) {
 			console.log(error);
 			throw error;
@@ -98,7 +96,7 @@ export async function checkUserExistance(req: Request, res: Response, next: Next
 		const user = await getUserByEmail(emailQuery);
 		user ? next() : res.status(404).json("User Not Found!");
 	} else {
-		res.status(400).json("Invalid Credential : Wrong Data Format!");
+		res.status(400).send("Invalid Credential : Wrong Data Format!");
 	}
 }
 
@@ -106,9 +104,9 @@ export async function checkUserNotRegistered(req: Request, res: Response, next: 
 	const emailQuery = req.body.email;
 	if (typeof emailQuery === "string") {
 		const user = await getUserByEmail(emailQuery);
-		user ? res.status(403).json() : next();
+		user ? res.status(403).send("User already exists") : next();
 	} else {
-		res.status(400).json();
+		res.status(400).send("Wrong email format");
 	}
 }
 
@@ -117,7 +115,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
 	const passwordQuery = req.body.password;
 
 	if (typeof emailQuery !== "string" || typeof passwordQuery !== "string") {
-		res.status(400).json("Invalid Credential : Wrong Data Format!");
+		res.status(400).send("Invalid Credential : Wrong Data Format!");
 		return;
 	}
 
@@ -127,19 +125,19 @@ export async function login(req: Request, res: Response, next: NextFunction) {
 	};
 	const cpass = await getPasswordByEmail(usr.email);
 	if (!cpass) {
-		res.status(500).json("Database operation failed!");
+		res.status(500).send("Database operation failed!");
 		return;
 	}
 	if (usr.password !== cpass.password) {
-		res.status(401).json("Wrong Password!");
+		res.status(401).send("Wrong Password!");
 		return;
 	}
 
 	const tokenUser = await getUserDataByEmail(usr.email);
 	if (tokenUser && typeof tokenUser != "boolean") {
-		res.send(generateToken(tokenUser.name, tokenUser.surname, tokenUser.email));
+		res.send(generateToken(tokenUser.email));
 	} else {
-		res.status(500).json("Database operation failed(unexpected)!");
+		res.status(500).send("Database operation failed(unexpected)!");
 	}
 }
 
@@ -168,10 +166,8 @@ export async function register(req: Request, res: Response, next: NextFunction) 
 }
 
 export async function updateCredentials(req: Request, res: Response, next: NextFunction) {
-	const nameQuery = req.body.tokenData.name;
-	const surnameQuery = req.body.tokenData.surname;
 	const emailQuery = req.body.tokenData.email;
-	if (typeof nameQuery === "string" && typeof surnameQuery === "string" && typeof emailQuery === "string") {
+	if (typeof emailQuery === "string") {
 		const user = {
 			name: req.body.name,
 			surname: req.body.surname,
@@ -181,13 +177,13 @@ export async function updateCredentials(req: Request, res: Response, next: NextF
 			if (await updateNameInfo(user)) {
 				res.sendStatus(200);
 			} else {
-				res.status(500).json("Database operation failed");
+				res.status(500).send("Database operation failed");
 			}
 		} else {
-			res.status(400).json("Invalid Credential : Cannot be Empty!");
+			res.status(400).send("Invalid Credential : Cannot be Empty!");
 		}
 	} else {
-		res.status(400).json("Invalid Credential : Wrong Data Format!");
+		res.status(400).send("Invalid Credential : Wrong Data Format!");
 	}
 }
 
@@ -197,10 +193,10 @@ export async function deleteUser(req: Request, res: Response, next: NextFunction
 		if (await removeUser(emailQuery)) {
 			next();
 		} else {
-			res.status(500).json();
+			res.status(500).send("Database operation failed");
 		}
 	} else {
-		res.status(400).json();
+		res.status(400).send("Request form is invalid");
 	}
 }
 
@@ -212,6 +208,6 @@ export async function getAllUserData(req: Request, res: Response) {
 		});
 		res.sendStatus(200);
 	} else {
-		res.status(500).json();
+		res.status(500).send("Database operation failed");
 	}
 }
