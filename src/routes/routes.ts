@@ -9,6 +9,8 @@ import {
 	checkUserNotRegistered,
 	getAllUserData,
 	authenticate,
+	authenticateByRedis,
+	logoutbyRedis,
 } from "../middlewares/middlewares";
 const userRouter = express.Router();
 
@@ -32,16 +34,16 @@ userRouter.route("/login").post(checkUserExistance, login, (req, res) => {
 	});
 });
 
-userRouter.route("/logout").post(logout, (req, res) => {
+userRouter.route("/logout").post(logoutbyRedis, (req, res) => {
 	console.log("Log Out.");
 });
 
-userRouter.route("/credentials").put(authenticate, updateCredentials, (req, res) => {
+userRouter.route("/credentials").put(authenticateByRedis, updateCredentials, (req, res) => {
 	console.log("Credentials Changed");
 	res.send("OK");
 });
 
-userRouter.route("/").delete(authenticate, deleteUser, (req, res) => {   
+userRouter.route("/").delete(authenticateByRedis, deleteUser, (req, res) => {   
 	console.log("User removed");
 	res.send("OK");
 });

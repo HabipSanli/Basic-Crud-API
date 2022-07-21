@@ -11,6 +11,8 @@ import {
 	removeUser,
 	getAllUsers,
 } from "../controller/postgrescontroller";
+import { addValue, getValueByKey } from "../controller/rediscontroller";
+
 let blacklist: string[] = [];
 
 //TRUST 
@@ -33,7 +35,7 @@ function generateToken(emailInfo: string) {
 		email: emailInfo,
 	};
 
-	return jwt.sign(user_info, ats);
+	return jwt.sign(user_info, ats,{expiresIn: '30s'});
 }
 
 function verifyToken(token: string) {
@@ -45,8 +47,8 @@ function verifyToken(token: string) {
 			const tokenData = jwt.verify(token, ats);
 			return tokenData as { email: string };
 		} catch (error) {
-			console.log(error);
-			throw error;
+			//console.log(error);
+			return null;
 		}
 	}
 }
@@ -87,6 +89,49 @@ export async function logout(req: Request, res: Response) {
 		res.status(500).json("Token is not in valid form!");
 	}
 }
+//////////////////////////////////////////////////////////////////
+
+
+///////////////////////////Redis//////////////////////////////////
+export async function authenticateByRedis(req : Request, res : Response, next : NextFunction) {
+	const header = req.headers.authorization;
+	if (header && header.startsWith("Bearer")) {
+		const token = header.slice("Bearer ".length);
+		try {
+			const tokenData = verifyToken(token);
+			if (tokenData === null) {
+				res.status(401).json("Invalid token!!");
+				return;
+			}
+			if(await getValueByKey(tokenData.email) === 'in'){
+				req.body.tokenData = tokenData;
+				next();
+			}
+		} catch (error) {
+			console.log(error);
+			res.status(500).json("Something failed!");
+		}
+	} else {
+		res.status(500).json("Token is not in valid form!");
+	}
+}
+
+export async function logoutbyRedis(req: Request, res: Response) {
+	let header = req.headers.authorization;
+	if (header && header.startsWith("Bearer")) {
+		let token = header.slice("Bearer ".length);
+		const tokenData = verifyToken(token)
+		if(tokenData === null){
+			res.status(401).json("Invalid token!!");
+			return;
+		}
+		addValue(tokenData.email,'out');
+		res.status(200).send('Logged out!');
+	} else {
+		res.status(500).json("Token is not in valid form!");
+	}
+}
+
 
 ////////////////////////////////////////////////////////////////
 
@@ -136,6 +181,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
 	const tokenUser = await getUserDataByEmail(usr.email);
 	if (tokenUser && typeof tokenUser != "boolean") {
 		res.send(generateToken(tokenUser.email));
+		addValue(usr.email, 'in');
 	} else {
 		res.status(500).send("Database operation failed(unexpected)!");
 	}
@@ -191,6 +237,8 @@ export async function deleteUser(req: Request, res: Response, next: NextFunction
 	const emailQuery = req.body.tokenData.email;
 	if (typeof emailQuery === "string") {
 		if (await removeUser(emailQuery)) {
+			req.body.tokenData.email = null; ///Will be changed later.
+			addValue(emailQuery,'deleted');
 			next();
 		} else {
 			res.status(500).send("Database operation failed");
