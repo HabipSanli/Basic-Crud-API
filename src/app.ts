@@ -1,5 +1,9 @@
-import { initalizeExpress } from './controller/expresscontroller';
-import { initRabbit, onMsg, sendMsg } from './controller/rabbitmqcontroller';
+import { initalizeExpress } from "./controller/expresscontroller";
+import { initRabbit, startConsuming, sendMsg } from "./controller/rabbitmqcontroller";
 
-initRabbit();
-initalizeExpress();
+async function main() {
+	await initRabbit();
+	await initalizeExpress();
+}
+
+main();

@@ -12,7 +12,7 @@ import {
 	getAllUsers,
 } from "../controller/postgrescontroller";
 import { addValue, getValueByKey } from "../controller/rediscontroller";
-import { getChannel, onMsg, sendMsg } from "../controller/rabbitmqcontroller";
+import { getChannel, startConsuming, sendMsg } from "../controller/rabbitmqcontroller";
 
 let blacklist: string[] = [];
 
@@ -263,11 +263,11 @@ export async function getAllUserData(req: Request, res: Response) {
 
 export async function sendMessage(req : Request, res: Response) {
 	try {
-		getChannel().then(()=>{
-		sendMsg(req.body.filename);
-		onMsg();
-		res.sendStatus(200);
-	})
+			sendMsg(req.body.filename);
+			startConsuming();
+			res.sendStatus(200);
+		
+	)
 	} catch (error) {
 		res.sendStatus(500);
 	}
