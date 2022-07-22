@@ -1,13 +1,7 @@
-import { Pool, PoolClient, QueryResult } from "pg";
+import pool from '../db/pool';
+import { QueryResult } from 'pg';
 import { CheckUser, User, LogUser, userPassword, userCredentials, UserFullForm } from "../models/user";
-const cfg = require("../../config.json");
-const dbprops = cfg.dbConfig;
 
-let pool: PoolClient;
-async function setPool() {
-	pool = await new Pool(dbprops).connect();
-}
-setPool();
 
 export async function getAllUsers(): Promise<QueryResult<any>> {
 	try {
