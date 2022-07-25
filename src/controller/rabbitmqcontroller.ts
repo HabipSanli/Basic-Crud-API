@@ -16,6 +16,7 @@ export async function startConsuming() {
 	channel.consume("name", (msg) => {
 		if (msg !== null) {
 			console.log(msg.content.toString());
+			channel.ack(msg);
 		} else {
 			console.log("Something failed on Message.");
 		}

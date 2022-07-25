@@ -267,7 +267,7 @@ export async function sendMessage(req : Request, res: Response) {
 			startConsuming();
 			res.sendStatus(200);
 		
-	)
+	
 	} catch (error) {
 		res.sendStatus(500);
 	}
